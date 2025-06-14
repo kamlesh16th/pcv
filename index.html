@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIC PCV Premium Calculator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e0f2e9; /* LightGreen theme */
+            margin: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            max-width: 1000px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2e7d32;
+        }
+        .form-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .form-group label {
+            width: 200px;
+            font-weight: bold;
+        }
+        .form-group select, .form-group input[type="text"], .form-group input[type="checkbox"] {
+            width: 200px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .form-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+        }
+        .buttons {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .buttons button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #2e7d32;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .buttons button:hover {
+            background-color: #1b5e20;
+        }
+        #output {
+            width: 100%;
+            height: 400px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #f9f9f9;
+            white-space: pre;
+            overflow-y: auto;
+        }
+        .checkbox-group {
+            display: flex;
+            gap: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>NIC PCV Premium Calculator</h1>
+        <div class="form-group">
+            <label for="policy-type">Policy Type:</label>
+            <select id="policy-type" onchange="updateInputStates()">
+                <option value="Package Policy">Package Policy</option>
+                <option value="Third Party">Third Party</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="zone">Zone of the Vehicle:</label>
+            <select id="zone">
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C" selected>C</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="idv">IDV (Rs.):</label>
+            <input type="text" id="idv" value="4000000">
+        </div>
+        <div class="form-group">
+            <label for="age">Vehicle Age:</label>
+            <select id="age" onchange="updateZeroDep()">
+                <option value="0-1 yrs">0-1 yrs</option>
+                <option value="1-2 yrs">1-2 yrs</option>
+                <option value="2-3 yrs" selected>2-3 yrs</option>
+                <option value="3-4 yrs">3-4 yrs</option>
+                <option value="4-5 yrs">4-5 yrs</option>
+                <option value="5-6 yrs">5-6 yrs</option>
+                <option value="6-7 yrs">6-7 yrs</option>
+                <option value="7-8 yrs">7-8 yrs</option>
+                <option value="8-9 yrs">8-9 yrs</option>
+                <option value="9-10 yrs">9-10 yrs</option>
+                <option value="Above 10 yrs">Above 10 yrs</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="passenger-capacity">Passenger Capacity:</label>
+            <input type="text" id="passenger-capacity" value="7">
+        </div>
+        <div class="form-group">
+            <label for="ll-workmen">LL to Workmen/Paid Driver:</label>
+            <select id="ll-workmen">
+                <option value="0" selected>0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="ncb">NCB (%):</label>
+            <select id="ncb">
+                <option value="0" selected>0</option>
+                <option value="20">20</option>
+                <option value="25">25</option>
+                <option value="35">35</option>
+                <option value="45">45</option>
+                <option value="50">50</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="addons">Other Manual Add-ons (Rs.):</label>
+            <input type="text" id="addons" value="0">
+        </div>
+        <div class="form-group">
+            <label for="towing">Towing SI (Rs.):</label>
+            <input type="text" id="towing" value="20000">
+        </div>
+        <div class="form-group">
+            <label for="discount">Discount on OD (%):</label>
+            <input type="text" id="discount" value="0">
+        </div>
+        <div class="form-group">
+            <label>Options:</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="electric"> Electric Vehicle</label>
+                <label><input type="checkbox" id="school-bus"> School Bus</label>
+                <label><input type="checkbox" id="zero-dep"> Zero Depreciation Cover</label>
+                <label><input type="checkbox" id="rsa"> Roadside Assistance (Rs.25)</label>
+                <label><input type="checkbox" id="imt23"> IMT-23</label>
+            </div>
+        </div>
+        <div class="buttons">
+            <button onclick="calculate()">Calculate</button>
+            <button onclick="reset()">Reset</button>
+            <button onclick="generatePDF()">Generate PDF</button>
+            <button onclick="window.close()">Exit</button>
+        </div>
+        <pre id="output"></pre>
+    </div>
+
+    <script>
+        // Helper data (same as Python)
+        const OD_RATES_ZONE_A = {
+            'upto 5': {
+                'upto 18': { fixed: 350, rate: 1.680 },
+                '18-36': { fixed: 450, rate: 1.680 },
+                '36-60': { fixed: 550, rate: 1.680 },
+                'above 60': { fixed: 680, rate: 1.680 }
+            },
+            '5-7': {
+                'upto 18': { fixed: 350, rate: 1.722 },
+                '18-36': { fixed: 450, rate: 1.722 },
+                '36-60': { fixed: 550, rate: 1.722 },
+                'above 60': { fixed: 680, rate: 1.722 }
+            },
+            'above 7': {
+                'upto 18': { fixed: 350, rate: 1.764 },
+                '18-36': { fixed: 450, rate: 1.764 },
+                '36-60': { fixed: 550, rate: 1.764 },
+                'above 60': { fixed: 680, rate: 1.764 }
+            }
+        };
+
+        const OD_RATES_ZONE_B = {
+            'upto 5': {
+                'upto 18': { fixed: 350, rate: 1.672 },
+                '18-36': { fixed: 450, rate: 1.672 },
+                '36-60': { fixed: 550, rate: 1.672 },
+                'above 60': { fixed: 680, rate: 1.672 }
+            },
+            '5-7': {
+                'upto 18': { fixed: 350, rate: 1.714 },
+                '18-36': { fixed: 450, rate: 1.714 },
+                '36-60': { fixed: 550, rate: 1.714 },
+                'above 60': { fixed: 680, rate: 1.714 }
+            },
+            'above 7': {
+                'upto 18': { fixed: 350, rate: 1.756 },
+                '18-36': { fixed: 450, rate: 1.756 },
+                '36-60': { fixed: 550, rate: 1.756 },
+                'above 60': { fixed: 680, rate: 1.756 }
+            }
+        };
+
+        const OD_RATES_ZONE_C = {
+            'upto 5': {
+                'upto 18': { fixed: 350, rate: 1.672 },
+                '18-36': { fixed: 450, rate: 1.656 },
+                '36-60': { fixed: 550, rate: 1.656 },
+                'above 60': { fixed: 680, rate: 1.656 }
+            },
+            '5-7': {
+                'upto 18': { fixed: 350, rate: 1.697 },
+                '18-36': { fixed: 450, rate: 1.697 },
+                '36-60': { fixed: 550, rate: 1.697 },
+                'above 60': { fixed: 680, rate: 1.697 }
+            },
+            'above 7': {
+                'upto 18': { fixed: 350, rate: 1.739 },
+                '18-36': { fixed: 450, rate: 1.739 },
+                '36-60': { fixed: 550, rate: 1.739 },
+                'above 60': { fixed: 680, rate: 1.739 }
+            }
+        };
+
+        const AGE_OPTIONS = ["0-1 yrs", "1-2 yrs", "2-3 yrs", "3-4 yrs", "4-5 yrs", "5-6 yrs", "6-7 yrs", "7-8 yrs", "8-9 yrs", "9-10 yrs", "Above 10 yrs"];
+        const GST_RATE = 0.18;
+        const ZERO_DEP_RATES = {
+            '0-1 yrs': 0.0029,
+            '1-2 yrs': 0.0031,
+            '2-3 yrs': 0.0036,
+            '3-4 yrs': 0.0043,
+            '4-5 yrs': 0.0053,
+            '5-6 yrs': 0,
+            '6-7 yrs': 0,
+            '7-8 yrs': 0,
+            '8-9 yrs': 0,
+            '9-10 yrs': 0,
+            'Above 10 yrs': 0
+        };
+        const ROADSIDE_ASSISTANCE = 25;
+        const NCB_OPTIONS = [0, 20, 25, 35, 45, 50];
+
+        function formatRow(label, value) {
+            let formattedValue;
+            try {
+                formattedValue = `Rs.${parseFloat(value).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
+            } catch (e) {
+                formattedValue = String(value);
+            }
+            return `${label.padEnd(35, ' ')}: ${formattedValue}`;
+        }
+
+        function calculateTpPremium(passengerCapacity, isElectric, isSchoolBus) {
+            if (isSchoolBus) {
+                if (isElectric) {
+                    return 10363 + (passengerCapacity * 633);
+                } else {
+                    return 12192 + (passengerCapacity * 745);
+                }
+            } else {
+                if (isElectric) {
+                    return 12192 + (passengerCapacity * 745);
+                } else {
+                    return 14343 + (passengerCapacity * 877);
+                }
+            }
+        }
+
+        function getOdPremium(idv, age, zone, passengerCapacity) {
+            let ageBand = age in ['0-1 yrs', '1-2 yrs', '2-3 yrs', '3-4 yrs', '4-5 yrs'] ? 'upto 5' :
+                          age in ['5-6 yrs', '6-7 yrs'] ? '5-7' : 'above 7';
+            let rates = zone === 'A' ? OD_RATES_ZONE_A : zone === 'B' ? OD_RATES_ZONE_B : OD_RATES_ZONE_C;
+            let rangeKey = passengerCapacity <= 18 ? 'upto 18' :
+                           passengerCapacity <= 36 ? '18-36' :
+                           passengerCapacity <= 60 ? '36-60' : 'above 60';
+            let fixed = rates[ageBand][rangeKey].fixed;
+            let rate = rates[ageBand][rangeKey].rate;
+            let baseOd = fixed + (idv * rate / 100);
+            return [baseOd, rangeKey, ageBand];
+        }
+
+        function calculate() {
+            let values = {
+                'policy-type': document.getElementById('policy-type').value,
+                'age': document.getElementById('age').value,
+                'electric': document.getElementById('electric').checked,
+                'school-bus': document.getElementById('school-bus').checked,
+                'passenger-capacity': document.getElementById('passenger-capacity').value,
+                'll-workmen': document.getElementById('ll-workmen').value,
+                'zone': document.getElementById('zone').value,
+                'ncb': document.getElementById('ncb').value,
+                'idv': document.getElementById('idv').value,
+                'addons': document.getElementById('addons').value,
+                'towing': document.getElementById('towing').value,
+                'discount': document.getElementById('discount').value,
+                'zero-dep': document.getElementById('zero-dep').checked,
+                'rsa': document.getElementById('rsa').checked,
+                'imt23': document.getElementById('imt23').checked
+            };
+
+            let policyType = values['policy-type'];
+            let age = values['age'];
+            let isElectric = values['electric'];
+            let isSchoolBus = values['school-bus'];
+
+            // Validate Passenger Capacity
+            let passengerCapacity = values['passenger-capacity'].trim();
+            if (!passengerCapacity) {
+                alert('Passenger Capacity cannot be empty.');
+                return;
+            }
+            passengerCapacity = parseFloat(passengerCapacity);
+            if (isNaN(passengerCapacity)) {
+                alert('Passenger Capacity must be a valid number.');
+                return;
+            }
+            if (passengerCapacity < 7) {
+                alert('Passenger Capacity must be at least 7.');
+                return;
+            }
+            if (passengerCapacity > 80) {
+                alert('Passenger Capacity cannot exceed 80.');
+                return;
+            }
+
+            // Get LL to Workmen/Paid Driver
+            let llWorkmen = parseInt(values['ll-workmen']);
+            let llWorkmenPremium = llWorkmen * 50;
+
+            let idv, baseOd, towingAmt, manualAddons, zeroDep, roadside, imt23Adjustment, ncbDiscount, discountAmount, odAfterDiscount, totalAddons, subtotalOd, ncbRate, discountPct, imt23, passengerRange, ageBand;
+
+            if (policyType === 'Third Party') {
+                idv = baseOd = towingAmt = manualAddons = zeroDep = roadside = imt23Adjustment = ncbDiscount = discountAmount = odAfterDiscount = totalAddons = subtotalOd = 0;
+                passengerRange = 'N/A';
+                ageBand = 'N/A';
+                ncbRate = 0;
+                discountPct = 0;
+                imt23 = false;
+            } else {
+                // Validate IDV
+                idv = values['idv'].trim();
+                if (!idv) {
+                    alert('IDV cannot be empty.');
+                    return;
+                }
+                idv = parseFloat(idv);
+                if (isNaN(idv)) {
+                    alert('IDV must be a valid number.');
+                    return;
+                }
+                if (idv < 0) {
+                    alert('IDV must be a number greater than or equal to Rs.0.');
+                    return;
+                }
+                if (idv > 10000000) {
+                    alert('IDV cannot exceed Rs.10,000,000.');
+                    return;
+                }
+
+                // Validate Manual Add-ons
+                manualAddons = values['addons'].trim();
+                manualAddons = manualAddons ? parseFloat(manualAddons) : 0;
+                if (isNaN(manualAddons)) {
+                    alert('Other Manual Add-ons must be a valid number.');
+                    return;
+                }
+                if (manualAddons < 0) {
+                    alert('Other Manual Add-ons must be a number greater than or equal to 0.');
+                    return;
+                }
+
+                // Validate Towing SI
+                let towing = values['towing'].trim();
+                towing = towing ? parseFloat(towing) : 0;
+                if (isNaN(towing)) {
+                    alert('Towing Charges must be a valid number.');
+                    return;
+                }
+                if (towing < 0) {
+                    alert('Towing Charges must be a number greater than or equal to 0.');
+                    return;
+                }
+
+                // Validate Discount
+                discountPct = values['discount'].trim();
+                discountPct = discountPct ? parseFloat(discountPct) : 0;
+                if (isNaN(discountPct)) {
+                    alert('Discount on OD must be a valid number.');
+                    return;
+                }
+                if (discountPct < 0 || discountPct > 100) {
+                    alert('Discount on OD must be a number between 0 and 100.');
+                    return;
+                }
+
+                let zone = values['zone'];
+                ncbRate = parseFloat(values['ncb']) / 100;
+                imt23 = values['imt23'];
+
+                // Calculate Base OD
+                [baseOd, passengerRange, ageBand] = getOdPremium(idv, age, zone, passengerCapacity);
+
+                // Towing SI premium
+                if (towing === 0) {
+                    towingAmt = 0;
+                } else if (towing === 10000) {
+                    towingAmt = 500;
+                } else if (towing === 15000) {
+                    towingAmt = 750;
+                } else if (towing === 20000) {
+                    towingAmt = 1500;
+                } else {
+                    alert('Towing SI must be either 10000, 15000, or 20000.');
+                    return;
+                }
+
+                // IMT-23
+                let imt23Base = baseOd;
+                let imt23Factor = imt23 ? 1.15 : 1.0;
+                let imt23Adjusted = imt23Base * imt23Factor;
+                imt23Adjustment = imt23Adjusted - imt23Base;
+
+                // OD components for NCB
+                let odComponentsTotal = imt23Adjusted + towingAmt + manualAddons;
+                ncbDiscount = odComponentsTotal * ncbRate;
+                let odAfterNcb = odComponentsTotal - ncbDiscount;
+
+                // Discount
+                discountAmount = odAfterNcb * (discountPct / 100);
+                odAfterDiscount = odAfterNcb - discountAmount;
+
+                // Zero Depreciation
+                zeroDep = values['zero-dep'] ? idv * ZERO_DEP_RATES[age] : 0;
+
+                // Roadside Assistance
+                roadside = values['rsa'] ? ROADSIDE_ASSISTANCE : 0;
+                totalAddons = zeroDep + roadside;
+
+                subtotalOd = odAfterDiscount + totalAddons;
+            }
+
+            // TP Premium
+            let tp = calculateTpPremium(passengerCapacity, isElectric, isSchoolBus);
+            let subtotalTp = tp + llWorkmenPremium;
+
+            // Net Premium (OD + TP)
+            let netPremium = subtotalOd + subtotalTp;
+
+            // GST (18% on Net Premium)
+            let gst = netPremium * GST_RATE;
+
+            // Total Premium
+            let total = netPremium + gst;
+
+            // Calculate Payout
+            let totalPayout = 0.0;
+            if (policyType === 'Package Policy') {
+                if (passengerCapacity >= 11 && passengerCapacity <= 20) {
+                    if (age === '0-1 yrs') {
+                        totalPayout = (subtotalOd * 0.20) + (subtotalTp * 0.20);
+                    } else if (['1-2 yrs', '2-3 yrs', '3-4 yrs', '4-5 yrs', '5-6 yrs', '6-7 yrs', '7-8 yrs', '8-9 yrs', '9-10 yrs'].includes(age)) {
+                        totalPayout = (subtotalOd * 0.175) + (subtotalTp * 0.15);
+                    } else {
+                        totalPayout = (subtotalOd * 0.175) + (subtotalTp * 0.075);
+                    }
+                } else {
+                    if (['0-1 yrs', '1-2 yrs', '2-3 yrs', '3-4 yrs', '4-5 yrs', '5-6 yrs', '6-7 yrs', '7-8 yrs', '8-9 yrs', '9-10 yrs'].includes(age)) {
+                        totalPayout = (subtotalOd * 0.175) + (subtotalTp * 0.075);
+                    } else {
+                        totalPayout = (subtotalOd * 0.175) + (subtotalTp * 0.075);
+                    }
+                }
+            } else {
+                if (['0-1 yrs', '1-2 yrs', '2-3 yrs'].includes(age)) {
+                    totalPayout = subtotalTp * 0.125;
+                } else {
+                    totalPayout = subtotalTp * 0.10;
+                }
+            }
+
+            // Output formatting
+            let leftCol = [
+                "--- OD PREMIUM DETAILS ---",
+                "-------------------",
+                formatRow("Base OD Premium", baseOd),
+                formatRow(imt23 ? "IMT-23 Loading (15%)" : "IMT-23 Loading", imt23Adjustment),
+                formatRow("Towing Charges", towingAmt),
+                formatRow("Manual Add-ons", manualAddons),
+                formatRow(`NCB Discount (${(ncbRate * 100).toFixed(0)}%)`, -ncbDiscount),
+                formatRow(`Discount on OD (${discountPct}%)`, -discountAmount),
+                formatRow("OD Total after Discounts", odAfterDiscount),
+                formatRow("Zero Depreciation", zeroDep),
+                formatRow("Roadside Assistance", roadside),
+                formatRow("SUBTOTAL OD", subtotalOd),
+                "========="
+            ];
+
+            let rightCol = [
+                "--- TP PREMIUM DETAILS ---",
+                "-------------------",
+                formatRow(`Third-Party Premium (${passengerCapacity.toFixed(0)} pax)`, tp),
+                formatRow(`LL to Workmen/Paid Driver (${llWorkmen})`, llWorkmenPremium),
+                formatRow("SUBTOTAL TP", subtotalTp),
+                "========="
+            ];
+
+            let vehicleType = isElectric ? "Electric" : "Conventional";
+            if (isSchoolBus) vehicleType += " School Bus";
+
+            let finalSection = [
+                "--- FINAL PREMIUM ---",
+                "-------------------",
+                formatRow("Policy Type", policyType),
+                formatRow("Vehicle Type", vehicleType),
+                formatRow("Vehicle Age", age),
+                formatRow("Net Premium (OD + TP)", netPremium),
+                formatRow("GST @18%", gst),
+                formatRow("TOTAL PREMIUM PAYABLE", Math.ceil(total)),
+                "====================",
+                "--- PAYOUT DETAILS ---",
+                "-------------------",
+                formatRow("Total Payout (Comm.+Incen)", totalPayout)
+            ];
+
+            let maxLines = Math.max(leftCol.length, rightCol.length);
+            let outputLines = [];
+            for (let i = 0; i < maxLines; i++) {
+                let left = leftCol[i] || "";
+                let right = rightCol[i] || "";
+                outputLines.push(`${left.padEnd(50, ' ')}${right.padStart(30, ' ')}`);
+            }
+
+            let output = outputLines.join('\n') + '\n\n' + finalSection.join('\n');
+            document.getElementById('output').textContent = output;
+        }
+
+        function updateInputStates() {
+            let policyType = document.getElementById('policy-type').value;
+            let odInputs = ['idv', 'ncb', 'addons', 'towing', 'discount', 'zero-dep', 'rsa', 'imt23'];
+            let state = policyType === 'Package Policy';
+            odInputs.forEach(key => {
+                document.getElementById(key).disabled = !state;
+            if (key === 'zero-dep') updateZeroDep();
+            });
+        }
+
+        function updateZeroDep() {
+            let age = document.getElementById('age').value;
+            let zeroDep = document.getElementById('zero-dep');
+            if (['5-6 yrs', '6-7 yrs', '7-8 yrs', '8-9 yrs', '9-10 yrs', 'Above 10 yrs'].includes(age)) {
+                zeroDep.disabled = true;
+                zeroDep.checked = false;
+            } else {
+                zeroDep.disabled = false;
+            }
+        }
+
+        function reset() {
+            document.getElementById('policy-type').value = 'Package Policy';
+            document.getElementById('zone').value = 'C';
+            document.getElementById('idv').value = '2000000';
+            document.getElementById('age').value = '2-3 yrs';
+            document.getElementById('passenger-capacity').value = '7';
+            document.getElementById('ll-workmen').value = '0';
+            document.getElementById('ncb').value = '0';
+            document.getElementById('addons').value = '0';
+            document.getElementById('towing').value = '0';
+            document.getElementById('discount').value = '0';
+            document.getElementById('electric').checked = false;
+            document.getElementById('school-bus').checked = false;
+            document.getElementById('zero-dep').checked = false;
+            document.getElementById('zero-dep').disabled = false;
+            document.getElementById('rsa').checked = false;
+            document.getElementById('imt23').checked = false;
+            document.getElementById('output').textContent = '';
+            updateInputStates();
+        }
+
+        function generatePDF() {
+            calculate();
+            let output = document.getElementById('output').textContent;
+            if (!output) {
+                alert('Please calculate the premium first.');
+                return;
+            }
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFont('courier', 'normal');
+            doc.setFontSize(12);
+            let y = 10;
+            output.split('\n').forEach(line => {
+                doc.text(line, 10, y);
+                y += 10;
+                if (y > 280) {
+                    doc.addPage();
+                    y = 10;
+                }
+            });
+            doc.save('premium_calculation.pdf');
+            alert('PDF Generated: Premium calculation has been saved as premium_calculation.pdf');
+        }
+
+        // Initialize input states on page load
+        window.onload = updateInputStates;
+    </script>
+</body>
+</html>
